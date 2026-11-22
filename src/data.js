@@ -29,7 +29,7 @@ export const skills = {
   Languages: ["C++", "C", "Python", "JavaScript"],
   "Web & Backend": ["HTML", "CSS", "React", "Node.js", "Express.js"],
   Database: ["PostgreSQL"],
-  "Core & Tools": ["OOP", "Git", "GitHub", "Cloud Computing", "Networking"],
+  "Core & Tools": ["OOP", "Git", "GitHub", "AWS", "Networking"],
 };
 
 // Add more projects later: copy one object and edit it.

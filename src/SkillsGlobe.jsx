@@ -72,7 +72,7 @@ export default function SkillsGlobe({ enabled }) {
           <div
             className="globe-label"
             key={technology}
-            style={{ "--orbit-delay": `${-(index / orbitSkills.length) * 36}s` }}
+            style={{ "--label-angle": `${(index / orbitSkills.length) * 360}deg` }}
           >
             <span>{technology}</span>
           </div>
