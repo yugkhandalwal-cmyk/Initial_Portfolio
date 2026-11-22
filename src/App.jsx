@@ -13,6 +13,13 @@ import {
 } from "./data.js";
 
 const Scene = lazy(() => import("./Scene.jsx"));
+const SkillsGlobe = lazy(() => import("./SkillsGlobe.jsx"));
+const loadingImages = [...new Set([
+  PHOTO,
+  ...projects.map((project) => project.image).filter(Boolean),
+  ...certificates.map((certificate) => certificate.image),
+])];
+
 const hasWebGL = () => {
   try {
     return !!document.createElement("canvas").getContext("webgl");
@@ -20,6 +27,69 @@ const hasWebGL = () => {
     return false;
   }
 };
+
+function LoadingScreen({ onComplete }) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    let disposed = false;
+    let assetsLoaded = false;
+    let completionTimer;
+    const startedAt = performance.now();
+    const images = loadingImages.map((source) => new Promise((resolve) => {
+      const image = new Image();
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+      image.onload = finish;
+      image.onerror = finish;
+      image.src = source;
+      if (image.complete) finish();
+    }));
+
+    Promise.all(images).then(() => {
+      assetsLoaded = true;
+    });
+
+    const progressTimer = window.setInterval(() => {
+      const elapsed = performance.now() - startedAt;
+      setProgress(Math.min(94, Math.round((elapsed / 1250) * 94)));
+      if (assetsLoaded && elapsed >= 1250) {
+        window.clearInterval(progressTimer);
+        setProgress(100);
+        completionTimer = window.setTimeout(() => {
+          if (!disposed) onComplete();
+        }, 350);
+      }
+    }, 32);
+
+    return () => {
+      disposed = true;
+      window.clearInterval(progressTimer);
+      window.clearTimeout(completionTimer);
+    };
+  }, [onComplete]);
+
+  return (
+    <div className="page-loader" role="status" aria-live="polite" aria-label={`Loading portfolio, ${progress}%`}>
+      <div className="loader-content">
+        <div className="loader-brand">YK<span>.</span></div>
+        <p className="loader-title">Building your experience</p>
+        <p className="loader-copy">Loading projects, credentials, and interactive details</p>
+        <div className="loader-meter">
+          <div className="loader-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress}>
+            <span className="loader-progress" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="loader-meta"><span>PORTFOLIO LOADING</span><span className="loader-percentage">{progress}%</span></div>
+        </div>
+        <span className="loader-footnote"><span className="loader-pulse" /> JUST A MOMENT</span>
+      </div>
+    </div>
+  );
+}
 
 function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "", website: "" });
@@ -84,6 +154,7 @@ function Tags({ items }) {
 
 export default function App() {
   const [webgl] = useState(hasWebGL);
+  const [loading, setLoading] = useState(true);
   const light = typeof window !== "undefined" && window.innerWidth < 700;
 
   useEffect(() => {
@@ -109,6 +180,7 @@ export default function App() {
 
   return (
     <>
+      {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
       <div className="bg" aria-hidden="true">
         {webgl && <Suspense fallback={null}><Scene light={light} /></Suspense>}
       </div>
@@ -173,6 +245,23 @@ export default function App() {
                 <div><span className="card-kicker">Currently studying</span><strong>{education.degree}</strong><span className="muted">{education.school} · {education.detail}</span></div>
               </div>
             </article>
+            <article className="card id-card" data-reveal style={{ "--reveal-delay": "70ms" }}>
+              <svg className="id-card-threads" viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M50 1 L13 45" />
+                <path d="M50 1 L87 45" />
+              </svg>
+              <span className="id-card-pin" aria-hidden="true" />
+              <div className="id-card-photo">
+                <img src={PHOTO} alt={`${profile.name} portrait`} loading="lazy" />
+              </div>
+              <div className="id-card-details">
+                <p className="card-kicker">Developer ID</p>
+                <h3>{profile.name}</h3>
+                <span>Computer Science &amp; Engineering</span>
+                <span className="muted">{profile.location}</span>
+              </div>
+              <span className="id-card-footer">PORTFOLIO · 2026</span>
+            </article>
             <article className="card achievements-card" data-reveal style={{ "--reveal-delay": "100ms" }}>
               <p className="card-kicker">A few things I&apos;m proud of</p>
               <ul>{achievements.map((achievement) => <li key={achievement}>{achievement}</li>)}</ul>
@@ -198,6 +287,15 @@ export default function App() {
                 <Tags items={items} />
               </article>
             ))}
+          </div>
+          <div className="skills-globe" data-reveal>
+            <div className="skills-globe-heading">
+              <p className="card-kicker">In constant motion</p>
+              <h3>My toolkit, in orbit</h3>
+            </div>
+              <Suspense fallback={<div className="globe-loading">Preparing the skills globe...</div>}>
+                <SkillsGlobe enabled={webgl} />
+              </Suspense>
           </div>
         </section>
 

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 
@@ -22,6 +22,20 @@ function ScrollCamera({ progress, reducedMotion }) {
     camera.position.y += (targetY - camera.position.y) * (reducedMotion ? 1 : 0.045);
     camera.lookAt(0, camera.position.y - 0.25, 0);
   });
+  return null;
+}
+
+function PointerParallax({ pointer, reducedMotion }) {
+  const { camera, scene } = useThree();
+
+  useFrame((_, delta) => {
+    const motion = reducedMotion ? 0 : 1 - Math.exp(-delta * 7);
+    scene.rotation.y += (pointer.current.x * 0.16 - scene.rotation.y) * motion;
+    scene.rotation.x += (-pointer.current.y * 0.1 - scene.rotation.x) * motion;
+    camera.position.x += (pointer.current.x * 0.4 - camera.position.x) * motion;
+    camera.position.z += (9 + pointer.current.y * 0.22 - camera.position.z) * motion;
+  });
+
   return null;
 }
 
@@ -87,11 +101,31 @@ function Sculpture({ item, index, progress, reducedMotion }) {
 
 function SceneContent({ light, reducedMotion }) {
   const progress = useRef(0);
+  const pointer = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const onPointerMove = (event) => {
+      pointer.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+      pointer.current.y = (event.clientY / window.innerHeight) * 2 - 1;
+    };
+    const onPointerLeave = () => {
+      pointer.current.x = 0;
+      pointer.current.y = 0;
+    };
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerleave", onPointerLeave);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerleave", onPointerLeave);
+    };
+  }, []);
+
   return (
     <>
       <fog attach="fog" args={["#070b14", 18, 42]} />
       <Stars radius={65} depth={48} count={light ? 650 : 1500} factor={1.5} saturation={0} fade speed={0.08} />
       <ScrollCamera progress={progress} reducedMotion={reducedMotion} />
+      <PointerParallax pointer={pointer} reducedMotion={reducedMotion} />
       {sculptures.map((item, index) => (
         <Sculpture key={`${item.shape}-${index}`} item={item} index={index} progress={progress} reducedMotion={reducedMotion} />
       ))}
