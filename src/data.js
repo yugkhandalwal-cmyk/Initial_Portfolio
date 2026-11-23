@@ -77,4 +77,7 @@ export const certificates = [
   { title: "Programming for Everybody", image: "/certs/certs2.jpg", url: "https://www.coursera.org/account/accomplishments/verify/VSTP21ABKC0K" },
   { title: "GenAI for Everyone", image: "/certs/certs3.png", url: "https://www.coursera.org/account/accomplishments/verify/KY5HF8QESC4Y" },
   { title: "Computer Programming", image: "/certs/certs4.jpg", url: "https://kommodo.ai/i/zWv8zn4J4L5vhxwV6frg" },
+  { title: "AWS Academy Graduate - Cloud Foundations - Training Badge", image: "/certs/certs5.jpg", url: "https://www.credly.com/badges/7693d886-be41-4855-a820-6aedbc84594e/linked_in?t=toy8tn" },
+
 ];
+
